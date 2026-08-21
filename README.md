@@ -94,7 +94,7 @@
     "mc-mod-config":    { "command": "node", "args": ["${MC_MOD_CONFIG_ROOT}/dist/index.js"] },
     "mc-rp-assistant":  { "command": "node", "args": ["${MC_RP_ROOT}/dist/index.js"] },
     "mc-changelog":     { "command": "node", "args": ["${MC_CHANGELOG_ROOT}/dist/index.js"] },
-    "minecraft-mod":    { "url": "https://minecraft-mod-mcp-v2.dcd887.workers.dev/mcp" }
+    "minecraft-mod":    { "url": "https://minecraft-mcp.mcjj.workers.dev/mcp" }
   }
 }
 ```
