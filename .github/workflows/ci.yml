@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check README links
+        run: |
+          echo "=== Validating README.md links ==="
+          # Verify all GitHub repo links are reachable (quick HEAD check)
+          repos=(
+            "dcd887/mc-pack-builder-mcp"
+            "dcd887/mc-changelog-mcp"
+            "dcd887/mc-modpack-mcp"
+            "dcd887/mc-mod-config-mcp"
+            "dcd887/mc-rp-assistant-mcp"
+            "dcd887/minecraft-mcp-server"
+          )
+          failed=0
+          for repo in "${repos[@]}"; do
+            http_code=$(curl -s -o /dev/null -w "%{http_code}" "https://github.com/$repo")
+            if [ "$http_code" = "200" ]; then
+              echo "  ✅ $repo — $http_code"
+            else
+              echo "  ❌ $repo — $http_code"
+              failed=1
+            fi
+          done
+          exit $failed
+
+      - name: Validate YAML syntax
+        run: |
+          echo "=== Checking YAML syntax ==="
+          if [ -f ".github/workflows/ci.yml" ]; then
+            python3 -c "import yaml; yaml.safe_load(open('.github/workflows/ci.yml'))" && echo "✅ ci.yml valid"
+          fi
+
+      - name: Check README structure
+        run: |
+          echo "=== Validating README.md structure ==="
+          required_sections=("## 架构图" "## 项目总览" "## 典型工作流" "## 技术栈" "## 快速开始" "## License")
+          missing=0
+          for section in "${required_sections[@]}"; do
+            if grep -q "$section" README.md; then
+              echo "  ✅ Found: $section"
+            else
+              echo "  ❌ Missing: $section"
+              missing=1
+            fi
+          done
+          exit $missing

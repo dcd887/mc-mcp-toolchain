@@ -7,7 +7,7 @@
 ```
                           ┌─────────────────────────────────────────────┐
                           │           Minecraft MCP Toolchain           │
-                          │            (6 个 MCP Servers)               │
+                          │         (6 个 MCP Server · 7+ 个工具)        │
                           └─────────────────────────────────────────────┘
                                            │
           ┌────────────────────────────────┼────────────────────────────────┐
@@ -76,7 +76,7 @@
 
 | 技术 | 用途 |
 |------|------|
-| TypeScript + Node.js 18+ | 5 个 stdio MCP Server |
+| TypeScript + Node.js 18+ | 6 个 stdio MCP Server |
 | @modelcontextprotocol/sdk v1.x | MCP 协议实现 |
 | Cloudflare Workers + Wrangler | minecraft-mcp-server 部署 |
 | 通义千问 (DashScope) API | mc-modpack-mcp 可选 AI 诊断 |
