@@ -101,6 +101,35 @@
 
 > Windows 用户将 `${VAR_ROOT}` 替换为带正斜杠的绝对路径，例如 `["C:/Users/xxx/Desktop/mc-pack-builder-mcp/dist/index.js"]`。
 
+## 环境变量配置汇总
+
+各仓库均支持 **零配置开箱即用**（内置默认值）。以下变量可通过系统环境变量或各仓库根目录 `.env` 文件覆盖（复制对应仓库的 `.env.example` 为 `.env`），优先级：环境变量 > `.env` > 内置默认值。改动后重启 MCP server 生效。
+
+| 仓库 | 变量 | 默认值 | 说明 |
+|------|------|--------|------|
+| mc-pack-builder-mcp | `PACK_BUILDER_MODRINTH_API_BASE` | `https://api.modrinth.com/v2` | Modrinth API 根地址 |
+| | `PACK_BUILDER_USER_AGENT` | `mc-pack-builder-mcp/1.1` | 请求 User-Agent |
+| | `PACK_BUILDER_VOLUME_MAX_MB` | `256` | 分卷导出每卷体积上限（MB） |
+| | `PACK_BUILDER_SKIP_DIRS` | `mods,config,resourcepacks,...` | 解压嵌套压缩包时跳过的顶层目录 |
+| mc-changelog-mcp | `MODRINTH_API_BASE` | `https://api.modrinth.com/v2` | Modrinth API 根地址 |
+| | `CHANGELOG_USER_AGENT` | `mc-changelog-mcp/1.0` | 请求 User-Agent |
+| | `CHANGELOG_MODS_DIR` | `mods` | 整合包内模组子目录名 |
+| | `CHANGELOG_ENRICH_LIMIT` | `5` | 增强信息每个模组返回的版本数上限 |
+| mc-mod-config-mcp | `MOD_CONFIG_EXTENSIONS` | `cfg,toml,json` | 支持的配置文件扩展名 |
+| | `MOD_CONFIG_MAX_FILE_MB` | `50` | 单个配置文件大小上限（MB） |
+| | `MOD_CONFIG_MAX_STRING_LEN` | `500` | 字符串值长度告警阈值 |
+| mc-rp-assistant-mcp | `RP_ASSISTANT_MODRINTH_API_BASE` | `https://api.modrinth.com/v2` | Modrinth API 根地址 |
+| | `RP_ASSISTANT_USER_AGENT` | `mc-rp-assistant-mcp/1.0` | 请求 User-Agent |
+| | `RP_ASSISTANT_TEXTURE_MAX_MB` | `2` | 单张纹理大小上限（MB） |
+| | `RP_ASSISTANT_PACK_ICON_MAX_KB` | `50` | 包图标 `pack.png` 上限（KB） |
+| | `RP_ASSISTANT_DEFAULT_SEARCH_LIMIT` | `10` | 搜索默认返回条数 |
+| | `RP_ASSISTANT_MAX_SEARCH_RESULTS` | `50` | 搜索返回条数硬上限 |
+| mc-modpack-mcp | `DASHSCOPE_API_KEY` | 空 | 通义千问 API Key（启用 AI 诊断） |
+| | `DASHSCOPE_BASE_URL` | 官方北京节点 | DashScope endpoint |
+| | `DISABLE_MODRINTH` | `false` | 设为 `true` 禁用 Modrinth 联网查询 |
+
+> 规则/配置类文件也可直接编辑后扩展，无需改代码：mc-pack-builder-mcp 的 `src/pack-rules.json`、mc-mod-config-mcp 的 `src/mod-defaults.json`、mc-rp-assistant-mcp 的 `src/rp-config.json`、mc-modpack-mcp 的 `src/rules.json`。
+
 ## 单项目入口
 
 各仓库均可独立安装、构建和使用：
