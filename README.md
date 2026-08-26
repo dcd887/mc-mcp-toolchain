@@ -7,7 +7,7 @@
 ```
                           ┌─────────────────────────────────────────────┐
                           │           Minecraft MCP Toolchain           │
-                          │         (6 个 MCP Server · 7+ 个工具)        │
+                          │         (7 个 MCP Server · 20+ 个工具)       │
                           └─────────────────────────────────────────────┘
                                            │
           ┌────────────────────────────────┼────────────────────────────────┐
@@ -41,6 +41,13 @@
                               │   mc-modpack-mcp    │
                               │   通义千问 API       │
                               └─────────────────────┘
+                                         │
+                                         ▼
+                              ┌─────────────────────┐
+                              │   📖 汉化 (可选)     │
+                              │   mc-translator-mcp │
+                              │   多供应商批量翻译    │
+                              └─────────────────────┘
 ```
 
 ## 项目总览
@@ -52,6 +59,7 @@
 | [mc-modpack-mcp](https://github.com/dcd887/mc-modpack-mcp) | 🔍 诊断 | 冲突检测、日志分析、崩溃报告、AI 智能诊断（通义千问） | stdio |
 | [mc-mod-config-mcp](https://github.com/dcd887/mc-mod-config-mcp) | ⚙️ 配置管理 | 读取/验证/对比模组配置文件 (.cfg/.toml/.json)、孤儿检测 | stdio |
 | [mc-rp-assistant-mcp](https://github.com/dcd887/mc-rp-assistant-mcp) | 🎨 资源包 | pack.mcmeta 验证、纹理分析、语言文件检查、Modrinth 搜索 | stdio |
+| [mc-translator-mcp](https://github.com/dcd887/mc-translator-mcp) | 📖 汉化 | 从模组 jar 批量翻译生成中文资源包（多供应商、术语表、质量自纠） | stdio |
 | [minecraft-mcp-server](https://github.com/dcd887/minecraft-mcp-server) | 🤖 代码生成 | FTB Quests 任务书、KubeJS 脚本、SNBT 校验、KubeJS 诊断 | HTTP (Cloudflare Workers) |
 
 ## 典型工作流
@@ -70,16 +78,22 @@
    └── 可选 AI：通义千问生成智能诊断报告
         │
 6️⃣  用 minecraft-mcp-server 生成 FTB Quests 和 KubeJS 脚本
+        │
+7️⃣  用 mc-translator-mcp 对任意模组 jar 做中文化（可选）
+   ├── preview：先看汉化范围与预估 token（零成本）
+   ├── dry-run：抽样预览翻译质量
+   └── mod / dir：正式翻译生成中文资源包
 ```
 
 ## 技术栈
 
 | 技术 | 用途 |
 |------|------|
-| TypeScript + Node.js 18+ | 6 个 stdio MCP Server |
+| TypeScript + Node.js 18+ | 6 个 stdio MCP Server（Node） |
+| Python 3.10+ + `mcp` SDK | mc-translator-mcp（汉化，Python） |
 | @modelcontextprotocol/sdk v1.x | MCP 协议实现 |
 | Cloudflare Workers + Wrangler | minecraft-mcp-server 部署 |
-| 通义千问 (DashScope) API | mc-modpack-mcp 可选 AI 诊断 |
+| 通义千问 (DashScope) / agnes / DeepSeek 等 | mc-modpack-mcp 可选 AI 诊断、mc-translator-mcp 批量翻译 |
 | Modrinth API | 模组/资源包元数据查询 |
 
 ## 快速开始
@@ -94,12 +108,15 @@
     "mc-mod-config":    { "command": "node", "args": ["${MC_MOD_CONFIG_ROOT}/dist/index.js"] },
     "mc-rp-assistant":  { "command": "node", "args": ["${MC_RP_ROOT}/dist/index.js"] },
     "mc-changelog":     { "command": "node", "args": ["${MC_CHANGELOG_ROOT}/dist/index.js"] },
+    "mc-translator":    { "command": "python", "args": ["-m", "mc_translator_mcp"] },
     "minecraft-mod":    { "url": "https://minecraft-mcp.mcjj.workers.dev/mcp" }
   }
 }
 ```
 
 > Windows 用户将 `${VAR_ROOT}` 替换为带正斜杠的绝对路径，例如 `["C:/Users/xxx/Desktop/mc-pack-builder-mcp/dist/index.js"]`。
+>
+> `mc-translator-mcp` 为 Python，需先 `pip install -e "mc-translator-mcp路径"`（或 `uv pip install`），再用 `["python", "-m", "mc_translator_mcp"]` 启动；其 API Key 通过 `mc-translator-mcp` 项目根目录的 `.env` 配置。
 
 ## 环境变量配置汇总
 
@@ -127,8 +144,15 @@
 | mc-modpack-mcp | `DASHSCOPE_API_KEY` | 空 | 通义千问 API Key（启用 AI 诊断） |
 | | `DASHSCOPE_BASE_URL` | 官方北京节点 | DashScope endpoint |
 | | `DISABLE_MODRINTH` | `false` | 设为 `true` 禁用 Modrinth 联网查询 |
+| mc-translator-mcp | `TRANSLATOR_API_KEY` | 空 | 任意 OpenAI 兼容供应商 key（最灵活） |
+| | `TRANSLATOR_BASE_URL` / `TRANSLATOR_MODEL` | 空 / 空 | 自定义供应商网关地址与模型名 |
+| | `AGNES_API_KEY` | 空 | agnes ai 别名（`AGNES_MODEL` 默认 `agnes-2.5-flash`） |
+| | `DASHSCOPE_API_KEY` / `QWEN_MODEL` | 空 / `qwen-plus` | 通义千问别名 |
+| | `DEEPSEEK_API_KEY` | 空 | DeepSeek（可选 fallback） |
+| | `BATCH_SIZE` / `OUTPUT_DIR` / `CACHE_FILE` | 15 / `output` / `translator_cache.json` | 翻译批大小 / 输出目录 / 缓存文件 |
+| | `GLOSSARY_FILE` | `translator_glossary.json` | 可选：模组定制术语表（JSON） |
 
-> 规则/配置类文件也可直接编辑后扩展，无需改代码：mc-pack-builder-mcp 的 `src/pack-rules.json`、mc-mod-config-mcp 的 `src/mod-defaults.json`、mc-rp-assistant-mcp 的 `src/rp-config.json`、mc-modpack-mcp 的 `src/rules.json`。
+> 规则/配置类文件也可直接编辑后扩展，无需改代码：mc-pack-builder-mcp 的 `src/pack-rules.json`、mc-mod-config-mcp 的 `src/mod-defaults.json`、mc-rp-assistant-mcp 的 `src/rp-config.json`、mc-modpack-mcp 的 `src/rules.json`、mc-translator-mcp 的 `translator_glossary.json`。
 
 ## 单项目入口
 
@@ -141,6 +165,15 @@ cd mc-modpack-mcp
 npm install
 npm run build
 node dist/index.js   # 或直接运行诊断：npm run diagnose
+```
+
+Python 汉化服务器（mc-translator-mcp）：
+```bash
+git clone https://github.com/dcd887/mc-translator-mcp.git
+cd mc-translator-mcp
+uv venv && uv pip install -e ".[dev]"
+cp .env.example .env        # 填任一供应商 API Key
+python -m mc_translator_mcp --help
 ```
 
 ## License
